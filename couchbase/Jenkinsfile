@@ -44,6 +44,7 @@ pipeline{
             script {
               withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')]) {
                 sh(script: 'kubectl apply -f cluster-master.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f cluster-master-service.yaml' + ' --kubeconfig $kubeconfig')
                 }
               }
             }

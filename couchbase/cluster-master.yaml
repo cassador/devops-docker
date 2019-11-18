@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: couchbase-master-rc
+spec:
+  replicas: 1
+  selector:
+    app: couchbase-master-pod
+  template:
+    metadata:
+      labels:
+        app: couchbase-master-pod
+    spec:
+      containers:
+      - name: couchbase-master
+        image: localhost:8082/couchbase:6.0.0
+        env:
+          - name: TYPE
+            value: MASTER
+        ports:
+        - containerPort: 8091
+----
+apiVersion: v1
+kind: Service
+metadata:
+  name: couchbase-master-service
+  labels:
+    app: couchbase-master-service
+spec:
+  ports:
+    - port: 8091
+  selector:
+    app: couchbase-master-pod
+  type: LoadBalancer

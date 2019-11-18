@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: couchbase-worker-rc
+spec:
+  replicas: 1
+  selector:
+    app: couchbase-worker-pod
+  template:
+    metadata:
+      labels:
+        app: couchbase-worker-pod
+    spec:
+      containers:
+      - name: couchbase-worker
+        image: localhost:8082/couchbase:6.0.0
+        env:
+          - name: TYPE
+            value: "WORKER"
+          - name: COUCHBASE\_MASTER
+            value: "couchbase-master-service"
+          - name: AUTO\_REBALANCE
+            value: "false"
+        ports:
+        - containerPort: 8091

@@ -9,4 +9,4 @@ spec:
     - port: 8091
   selector:
     app: couchbase-master-pod
-  type: LoadBalancer
+  type: NodePort

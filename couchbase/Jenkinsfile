@@ -40,11 +40,13 @@ pipeline{
       stage ('kubernetes deploy')
       {
         steps {
+          dir('couchbase') {
             script {
               withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')]) {
                 sh(script: 'kubectl apply -f cluster-master.yaml' + ' --kubeconfig $kubeconfig')
                 }
               }
+            }
           }
       }
 

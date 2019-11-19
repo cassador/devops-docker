@@ -58,13 +58,14 @@ pipeline{
               withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
               {
                 def volumeExist = sh(script: 'kubectl get pv -n default --kubeconfig $kubeconfig | grep "kafka-pv" | wc -l ', returnStatus: true)
+                sh(script: 'echo $volumeExist')
                 if (volumeExist == '0') {
                   sh(script: 'kubectl apply -f persistent-volume.yaml' + ' --kubeconfig $kubeconfig')
                   sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
                 }
                 else
                 {
-                  def volumeClaimExist = sh(script: 'kubectl get pvc -n default --kubeconfig $kubeconfig | grep "kafka-pvc" | wc -l ', returnStdout: true)
+                  def volumeClaimExist = sh(script: 'kubectl get pvc -n default --kubeconfig $kubeconfig | grep "kafka-pvc" | wc -l ', returnStatus: true)
                   sh(script: 'echo $volumeClaimExist')
                   if (volumeClaimExist == '0')
                   {

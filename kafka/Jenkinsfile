@@ -3,6 +3,8 @@ pipeline{
  environment
  {
      dockerRegistry= 'http://localhost:8082'
+     kubecredentials= "kubernetes-dev"
+     credentials= 'nexus'
  }
  stages
   {
@@ -19,7 +21,7 @@ pipeline{
               dir('kafka/kafka-app') {
                 script {
                     sh 'ls -la'
-                    docker.withRegistry('http://localhost:8082', 'nexus') {
+                    docker.withRegistry('http://localhost:8082', credentials) {
                         def customImage = docker.build("pdi/kafka-app:1.0.0")
                         customImage.push()
                     }
@@ -28,7 +30,7 @@ pipeline{
               dir('kafka/kafka-rest') {
                 script {
                     sh 'ls -la'
-                    docker.withRegistry('http://localhost:8082', 'nexus') {
+                    docker.withRegistry('http://localhost:8082', credentials) {
                         def customImage = docker.build("pdi/kafka-rest:1.0.0")
                         customImage.push()
                     }
@@ -37,7 +39,7 @@ pipeline{
               dir('kafka/kafka-topics') {
                 script {
                     sh 'ls -la'
-                    docker.withRegistry('http://localhost:8082', 'nexus') {
+                    docker.withRegistry('http://localhost:8082', credentials) {
                         def customImage = docker.build("pdi/kafka-topics-ui:1.0.0")
                         customImage.push()
                     }

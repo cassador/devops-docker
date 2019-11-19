@@ -11,7 +11,6 @@ pipeline{
       stage ('repository clone')
       {
           steps {
-              /*git credentialsId: 'gitcreds', url: 'https://github.com/cassador/devops-docker.git'*/
               checkout scm
           }
       }
@@ -20,8 +19,7 @@ pipeline{
           steps{
               dir('kafka/kafka-app') {
                 script {
-                    sh 'ls -la'
-                    docker.withRegistry('http://localhost:8082', credentials) {
+                    docker.withRegistry(dockerRegistry, credentials) {
                         def customImage = docker.build("pdi/kafka-app:1.0.0")
                         customImage.push()
                     }
@@ -29,8 +27,7 @@ pipeline{
               }
               dir('kafka/kafka-rest') {
                 script {
-                    sh 'ls -la'
-                    docker.withRegistry('http://localhost:8082', credentials) {
+                    docker.withRegistry(dockerRegistry, credentials) {
                         def customImage = docker.build("pdi/kafka-rest:1.0.0")
                         customImage.push()
                     }
@@ -38,8 +35,7 @@ pipeline{
               }
               dir('kafka/kafka-topics') {
                 script {
-                    sh 'ls -la'
-                    docker.withRegistry('http://localhost:8082', credentials) {
+                    docker.withRegistry(dockerRegistry, credentials) {
                         def customImage = docker.build("pdi/kafka-topics-ui:1.0.0")
                         customImage.push()
                     }
@@ -57,17 +53,15 @@ pipeline{
             {
               withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
               {
-                def volumeExist = sh(script: 'kubectl get pv -n default --kubeconfig $kubeconfig | grep "kafka-pv" | wc -l ', returnStatus: true)
-                sh(script: 'echo $volumeExist')
+                def volumeExist = sh(script: 'kubectl get pv -n default --kubeconfig $kubeconfig | grep "ebs" | wc -l ', returnStatus: true)
                 if (volumeExist == 0) {
                   sh(script: 'kubectl apply -f persistent-volume.yaml' + ' --kubeconfig $kubeconfig')
                   sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
                 }
                 else
                 {
-                  def volumeClaimExist = sh(script: 'kubectl get pvc -n default --kubeconfig $kubeconfig | grep "kafka-pvc" | wc -l ', returnStatus: true)
-                  sh(script: 'echo $volumeClaimExist')
-                  if (volumeClaimExist == '0')
+                  def volumeClaimExist = sh(script: 'kubectl get pvc -n default --kubeconfig $kubeconfig | grep "kafka-app-pv-claim" | wc -l ', returnStatus: true)
+                  if (volumeClaimExist == 0)
                   {
                     sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
                   }

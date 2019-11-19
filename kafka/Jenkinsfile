@@ -1,0 +1,50 @@
+pipeline{
+ agent any
+ environment
+ {
+     dockerRegistry= 'http://localhost:8082'
+ }
+ stages
+  {
+      stage ('repository clone')
+      {
+          steps {
+              /*git credentialsId: 'gitcreds', url: 'https://github.com/cassador/devops-docker.git'*/
+              checkout scm
+          }
+      }
+      stage (' docker image build & push to repo')
+      {
+          steps{
+              dir('kafka/kafka-app') {
+                script {
+                    sh 'ls -la'
+                    docker.withRegistry('http://localhost:8082', 'nexus') {
+                        def customImage = docker.build("pdi/kafka-app:1.0.0")
+                        customImage.push()
+                    }
+                }
+              }
+              dir('kafka/kafka-rest') {
+                script {
+                    sh 'ls -la'
+                    docker.withRegistry('http://localhost:8082', 'nexus') {
+                        def customImage = docker.build("pdi/kafka-rest:1.0.0")
+                        customImage.push()
+                    }
+                }
+              }
+              dir('kafka/kafka-topics') {
+                script {
+                    sh 'ls -la'
+                    docker.withRegistry('http://localhost:8082', 'nexus') {
+                        def customImage = docker.build("pdi/kafka-topics-ui:1.0.0")
+                        customImage.push()
+                    }
+                }
+              }
+          }
+      }
+
+  }
+}

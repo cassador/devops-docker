@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-cloud-proxy
+  namespace: default
+spec:
+  ports:
+  - port: 8082
+    targetPort: 8082
+    nodePort: 31972
+    protocol: TCP
+  type: NodePort
+  selector:
+    app: kafka-cloud-proxy

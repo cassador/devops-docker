@@ -1,0 +1,55 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kafka-cloud-proxy
+  namespace: default
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: kafka-cloud-proxy
+    spec:
+      containers:
+      - name: kafka-cloud-proxy
+        #image: confluentinc/cp-kafka-rest:5.1.3
+        image: pdi/kafka-rest:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8082
+        readinessProbe:
+          initialDelaySeconds: 20
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8082
+        livenessProbe:
+          initialDelaySeconds: 20
+          timeoutSeconds: 3
+          periodSeconds: 10
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8082
+        resources:
+          requests:
+            memory: "250Mi"
+            cpu: "250m"
+          limits:
+            memory: "500Mi"
+            cpu: "500m"
+        env:
+        - name: KAFKA_REST_HOST_NAME
+          value: kafka-rest-proxy
+        - name: KAFKA_REST_BOOTSTRAP_SERVERS
+          value: kafka.default:9092
+        - name: KAFKA_REST_LISTENERS
+          value: "http://0.0.0.0:8082"
+      restartPolicy: Always

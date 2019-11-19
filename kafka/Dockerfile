@@ -1,0 +1,1 @@
+FROM confluent/kafka:latest

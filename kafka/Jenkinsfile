@@ -59,7 +59,7 @@ pipeline{
               {
                 def volumeExist = sh(script: 'kubectl get pv -n default --kubeconfig $kubeconfig | grep "kafka-pv" | wc -l ', returnStatus: true)
                 sh(script: 'echo $volumeExist')
-                if (volumeExist == '0') {
+                if (volumeExist == 0) {
                   sh(script: 'kubectl apply -f persistent-volume.yaml' + ' --kubeconfig $kubeconfig')
                   sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
                 }

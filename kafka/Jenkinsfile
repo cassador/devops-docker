@@ -45,6 +45,70 @@ pipeline{
               }
           }
       }
+      stage(' kafka-app deployment')
+      {
+        steps
+        {
+          dir('kafka/kafka-app')
+          {
+            script
+            {
+              withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
+              {
+                def volumeExist = sh(script: 'kubectl get pv -n default | grep "kafka-pv" | wc -l ', returnStdout: true)
+                if (volumeExist == '0') {
+                  sh(script: 'kubectl apply -f persistent-volume.yaml' + ' --kubeconfig $kubeconfig')
+                  sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
+                }
+                else
+                {
+                  def volumeClaimExist = sh(script: 'kubectl get pvc -n default | grep "kafka-pvc" | wc -l ', returnStdout: true)
+                  if (volumeClaimExist == '0')
+                  {
+                    sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
+                  }
+                    sh(script: 'kubectl apply -f kafka-statefulset.yaml' + ' --kubeconfig $kubeconfig')
+                    sh(script: 'kubectl apply -f kafka-service.yaml' + ' --kubeconfig $kubeconfig')
+                    sh(script: 'kubectl apply -f kafka-service-headless.yaml' + ' --kubeconfig $kubeconfig')
+                }
 
+              }
+            }
+          }
+        }
+      }
+
+      stage ('kafka-rest deployment') {
+        steps {
+          dir('kafka/kafka-rest')
+            {
+              script
+              {
+                withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
+                {
+                  sh(script: 'kubectl apply -f kafka-rest-deployment.yaml' + ' --kubeconfig $kubeconfig')
+                  sh(script: 'kubectl apply -f kafka-rest-service.yaml' + ' --kubeconfig $kubeconfig')
+                }
+              }
+            }
+        }
+      }
+      stage ('kafka-topics-ui deployment ')
+      {
+        steps
+        {
+          dir('kafka/kafka-topics')
+          {
+            script
+            {
+              withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
+              {
+                sh(script: 'kubectl apply -f kafka-topics-deployment.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f kafka-topics-service.yaml' + ' --kubeconfig $kubeconfig')
+              }
+            }
+          }
+        }
+      }
   }
 }

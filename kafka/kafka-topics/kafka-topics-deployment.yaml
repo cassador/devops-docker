@@ -1,10 +1,15 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    app: kafka-topics-ui
   name: kafka-topics-ui
   namespace: default
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-topics-ui
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -16,15 +21,17 @@ spec:
         app: kafka-topics-ui
     spec:
       containers:
-      - name: kafka-topics-ui
-        #image: landoop/kafka-topics-ui:0.9.4
-        image: pdi/kafka-topics-ui:1.0.0
-        imagePullPolicy: Always
-        env:
+      - env:
         - name: KAFKA_REST_PROXY_URL
           value: kafka-cloud-proxy.default:8082
         - name: PROXY
           value: "true"
+        image: pdi/kafka-topics-ui:1.0.0
+        imagePullPolicy: Always
+        name: kafka-topics-ui
         ports:
         - containerPort: 8000
+          protocol: TCP
+      dnsPolicy: ClusterFirst
       restartPolicy: Always
+      terminationGracePeriodSeconds: 30

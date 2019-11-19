@@ -1,10 +1,15 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    app: kafka-cloud-proxy
   name: kafka-cloud-proxy
   namespace: default
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-cloud-proxy
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -12,44 +17,51 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      creationTimestamp: null
       labels:
         app: kafka-cloud-proxy
     spec:
       containers:
-      - name: kafka-cloud-proxy
-        #image: confluentinc/cp-kafka-rest:5.1.3
-        image: pdi/kafka-rest:1.0.0
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8082
-        readinessProbe:
-          initialDelaySeconds: 20
-          timeoutSeconds: 5
-          periodSeconds: 10
-          failureThreshold: 3
-          httpGet:
-            path: /
-            port: 8082
-        livenessProbe:
-          initialDelaySeconds: 20
-          timeoutSeconds: 3
-          periodSeconds: 10
-          failureThreshold: 3
-          httpGet:
-            path: /
-            port: 8082
-        resources:
-          requests:
-            memory: "250Mi"
-            cpu: "250m"
-          limits:
-            memory: "500Mi"
-            cpu: "500m"
-        env:
+      - env:
         - name: KAFKA_REST_HOST_NAME
           value: kafka-rest-proxy
         - name: KAFKA_REST_BOOTSTRAP_SERVERS
           value: kafka.default:9092
         - name: KAFKA_REST_LISTENERS
-          value: "http://0.0.0.0:8082"
+          value: http://0.0.0.0:8082
+        image: pdi/kafka-rest:1.0.0
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8082
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        name: kafka-cloud-proxy
+        ports:
+        - containerPort: 8082
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8082
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 250m
+            memory: 250Mi
+      dnsPolicy: ClusterFirst
       restartPolicy: Always
+      terminationGracePeriodSeconds: 30

@@ -21,6 +21,8 @@ spec:
       labels:
         app: kafka-cloud-proxy
     spec:
+      imagePullSecrets:
+        - name: regcred
       containers:
       - env:
         - name: KAFKA_REST_HOST_NAME
@@ -30,8 +32,6 @@ spec:
         - name: KAFKA_REST_LISTENERS
           value: http://0.0.0.0:8082
         image: pdi/kafka-rest:1.0.0
-      imagePullSecrets:
-        - name: regcred
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3

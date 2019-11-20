@@ -31,7 +31,7 @@ spec:
           value: kafka.default:9092
         - name: KAFKA_REST_LISTENERS
           value: http://0.0.0.0:8082
-        image: pdi/kafka-rest:1.0.0
+        image: localhost:8082/pdi/kafka-rest:1.0.0
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3

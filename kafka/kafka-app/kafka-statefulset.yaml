@@ -62,7 +62,7 @@ spec:
         - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
           value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
         #image: confluentinc/cp-kafka:4.1.2-2
-        image: pdi/kafka:1.0.0
+        image: localhost:8082/pdi/kafka:1.0.0
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:

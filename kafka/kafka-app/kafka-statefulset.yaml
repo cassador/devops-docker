@@ -30,7 +30,7 @@ spec:
       volumes:
       - name: datadir
         persistentVolumeClaim:
-          claimName: kafka-pv-claim
+          claimName: kafka-app-pv-claim
       imagePullSecrets:
         - name: regcred
       containers:

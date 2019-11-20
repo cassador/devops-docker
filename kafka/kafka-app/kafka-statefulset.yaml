@@ -31,6 +31,8 @@ spec:
       - name: datadir
         persistentVolumeClaim:
           claimName: kafka-pv-claim
+      imagePullSecrets:
+        - name: regcred
       containers:
       - command:
         - sh
@@ -61,8 +63,6 @@ spec:
           value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
         #image: confluentinc/cp-kafka:4.1.2-2
         image: pdi/kafka:1.0.0
-        imagePullSecrets:
-          - name: regcred
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:

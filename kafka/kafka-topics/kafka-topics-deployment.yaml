@@ -28,7 +28,7 @@ spec:
           value: kafka-cloud-proxy.default:8082
         - name: PROXY
           value: "true"
-        image: pdi/kafka-topics-ui:1.0.0
+        image: localhost:8082/pdi/kafka-topics-ui:1.0.0
         imagePullPolicy: Always
         name: kafka-topics-ui
         ports:

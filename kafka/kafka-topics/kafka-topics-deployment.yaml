@@ -27,6 +27,8 @@ spec:
         - name: PROXY
           value: "true"
         image: pdi/kafka-topics-ui:1.0.0
+        imagePullSecrets:
+          - name: regcred
         imagePullPolicy: Always
         name: kafka-topics-ui
         ports:

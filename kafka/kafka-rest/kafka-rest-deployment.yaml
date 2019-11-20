@@ -30,6 +30,8 @@ spec:
         - name: KAFKA_REST_LISTENERS
           value: http://0.0.0.0:8082
         image: pdi/kafka-rest:1.0.0
+        imagePullSecrets:
+          - name: regcred
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3

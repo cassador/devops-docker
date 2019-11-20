@@ -65,11 +65,10 @@ pipeline{
                   {
                     sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
                   }
-                    sh(script: 'kubectl apply -f kafka-statefulset.yaml' + ' --kubeconfig $kubeconfig')
-                    sh(script: 'kubectl apply -f kafka-service.yaml' + ' --kubeconfig $kubeconfig')
-                    sh(script: 'kubectl apply -f kafka-service-headless.yaml' + ' --kubeconfig $kubeconfig')
                 }
-
+                sh(script: 'kubectl apply -f kafka-statefulset.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f kafka-service.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f kafka-service-headless.yaml' + ' --kubeconfig $kubeconfig')
               }
             }
           }

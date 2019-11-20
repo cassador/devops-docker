@@ -1,0 +1,51 @@
+pipeline{
+ agent any
+ environment
+ {
+     dockerRegistry= 'http://localhost:8082'
+     kubecredentials= "kubernetes-dev"
+     credentials= 'nexus'
+ }
+ stages
+  {
+      stage ('repository clone')
+      {
+          steps {
+              checkout scm
+          }
+      }
+      stage (' docker image build & push to repo')
+      {
+          steps{
+              dir('zookeper') {
+                script {
+                    docker.withRegistry(dockerRegistry, credentials) {
+                        def customImage = docker.build("pdi/zookeper:1.0.0")
+                        customImage.push()
+                    }
+                }
+              }
+          }
+      }
+      stage(' zookeper-app deployment')
+      {
+        steps
+        {
+          dir('zookeper')
+          {
+            script
+            {
+              withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
+              {
+                sh(script: 'kubectl apply -f zookeper-statefulset.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f zookeper-service.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f zookeper-service-headless.yaml' + ' --kubeconfig $kubeconfig')
+              }
+            }
+          }
+        }
+      }
+
+
+  }
+}

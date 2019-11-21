@@ -20,7 +20,7 @@ pipeline{
               dir('kafka/kafka-app') {
                 script {
                     docker.withRegistry(dockerRegistry, credentials) {
-                        def customImage = docker.build("pdi/kafka-app:1.0.0")
+                        def customImage = docker.build("pdi/kafka-app:1.0.1")
                         customImage.push()
                     }
                 }

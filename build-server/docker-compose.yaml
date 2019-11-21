@@ -1,0 +1,61 @@
+version: '2'
+
+networks:
+  devnet:
+    driver: bridge
+
+services:
+ nexus:
+  image: sonatype/nexus3
+  container_name: nexus
+  ports:
+    - "8081:8081"
+    - "8082:8082"
+  networks:
+    - devnet
+  volumes:
+    - "/opt/nexus/:/var/lib/nexus"
+
+ jenkins:
+  image: jenkins/jenkins:2.190.2
+  container_name: jenkins
+  ports:
+    - "8080:8080"
+  networks:
+    - devnet
+  volumes:
+    - "$PWD/jenkins:/var/jenkins_home"
+    - "/var/run/docker.sock:/var/run/docker.sock"
+ sonarqube:
+  image: sonarqube
+  container_name: sonarqube
+  restart: always
+  ports:
+   - "9000:9000"
+  networks:
+    - devnet
+  depends_on:
+    - sonardb
+  links:
+    - sonardb
+  environment:
+   - SONARQUBE_JDBC_URL=jdbc:postgresql://sonardb:5432/sonar
+   - SONARQUBE_JDBC_USERNAME=sonar
+   - SONARQUBE_JDBC_PASSWORD=sonar
+  volumes:
+    - "/opt/sonar/:/var/lib/sonar"
+
+ sonardb:
+  networks:
+    - devnet
+  image: postgres:9.6.1
+  container_name: postgres
+  restart: always
+  environment:
+   - POSTGRES_USER=sonar
+   - POSTGRES_PASSWORD=sonar
+   - POSTGRESQL_DB=sonar
+  ports:
+    - "5432:5432"
+  volumes:
+    - "/opt/postgres:/var/lib/postgresql"

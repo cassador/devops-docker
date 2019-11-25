@@ -1,0 +1,1 @@
+FROM apache/activemq-artemis

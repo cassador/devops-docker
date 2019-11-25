@@ -1,0 +1,55 @@
+pipeline{
+ agent any
+ environment
+ {
+     dockerRegistry= 'http://localhost:8082'
+     kubecredentials= "kubernetes-dev"
+     credentials= 'nexus'
+ }
+ stages
+  {
+      stage ('repository clone')
+      {
+          steps {
+              /*git credentialsId: 'gitcreds', url: 'https://github.com/cassador/devops-docker.git'*/
+              checkout scm
+          }
+      }
+      /*stage ('source coude build')
+      {
+          steps {
+
+          }
+      }*/
+      stage (' docker image build & push to repo')
+      {
+          steps{
+              dir('redis') {
+                script {
+                    sh 'ls -la'
+                    /*docker.build("centos-jdk8")*/
+                    /* adding for additional complex testing*/
+                    docker.withRegistry('http://localhost:8082', credentials) {
+                        def customImage = docker.build("pdi/redis:1.0.0")
+                        customImage.push()
+                    }
+                }
+              }
+          }
+      }
+      stage ('kubernetes deploy')
+      {
+        steps {
+          dir('redis') {
+            script {
+              withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')]) {
+                sh(script: 'kubectl apply -f redis.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f redis-service.yaml' + ' --kubeconfig $kubeconfig')
+                }
+              }
+            }
+          }
+      }
+
+  }
+}

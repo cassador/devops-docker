@@ -1,10 +1,8 @@
-apiVersion: apps/v1
+piVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
   namespace: default
-  labels:
-    version: __VERSION__
 spec:
   replicas: 1
   selector:
@@ -15,7 +13,6 @@ spec:
     metadata:
       labels:
         app: redis
-        version: __VERSION__
     spec:
       affinity:
         nodeAffinity:
@@ -26,10 +23,6 @@ spec:
                 operator: In
                 values:
                 - database
-              - key: provider
-                operator: In
-                values:
-                - provider
       containers:
       - name: redis
         #image: redis:4.0.10-stretch

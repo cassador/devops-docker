@@ -1,0 +1,53 @@
+pipeline{
+ agent any
+ environment
+ {
+     dockerRegistry= 'http://localhost:8082'
+     kubecredentials= "kubernetes-dev"
+     credentials= 'nexus'
+ }
+ stages
+  {
+      stage ('repository clone')
+      {
+          steps {
+              checkout scm
+          }
+      }
+      stage (' docker image build & push to repo')
+      {
+          steps{
+              dir('elastic') {
+                script {
+                    docker.withRegistry(dockerRegistry, credentials) {
+                        def customImage = docker.build("pdi/elastic:6.2.3")
+                        customImage.push()
+                    }
+                }
+              }
+          }
+      }
+      stage(' elasticsearch deployment')
+      {
+        steps
+        {
+          dir('zookeper')
+          {
+            script
+            {
+              withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
+              {
+                sh(script: 'kubectl apply -f elastic-pv.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f elastic-pvc.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f elastic-statefulset.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f elastic-service.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f elastic-discovery-service.yaml' + ' --kubeconfig $kubeconfig')
+              }
+            }
+          }
+        }
+      }
+
+
+  }
+}

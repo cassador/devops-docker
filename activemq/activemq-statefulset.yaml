@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: smp-activemq
+  namespace: default 
+spec:
+  selector:
+    matchLabels:
+      app: smp-activemq
+  serviceName: smp-activemq
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: smp-activemq
+    spec:
+      volumes:
+      - name: datadir-active
+        persistentVolumeClaim:
+          claimName: activemq-pv-claim
+      containers:
+      - name: smp-activemq
+        image: localhost:8082/pdi/activemq:1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 61616
+          name: smp-activemq
+        volumeMounts:
+        - name: datadir-active
+          mountPath: <mount-path>

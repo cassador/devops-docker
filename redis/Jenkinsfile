@@ -27,7 +27,6 @@ pipeline{
               dir('redis') {
                 script {
                     sh 'ls -la'
-                    /*docker.build("centos-jdk8")*/
                     /* adding for additional complex testing*/
                     docker.withRegistry('http://localhost:8082', credentials) {
                         def customImage = docker.build("pdi/redis:1.0.0")

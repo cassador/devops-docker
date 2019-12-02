@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: grafana
+    component: core
+  name: grafana-core
+  namespace: monitoring
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 2147483647
+  selector:
+    matchLabels:
+      app: grafana
+      component: core
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: grafana
+        component: core
+    spec:
+      containers:
+      - env:
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "true"
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              key: admin-username
+              name: grafana
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: admin-password
+              name: grafana
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "false"
+        image: grafana/grafana:4.2.0
+        imagePullPolicy: IfNotPresent
+        name: grafana-core
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /login
+            port: 3000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-persistent-storage
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: grafana-persistent-storage
+status: {}

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: prometheus
+    component: core
+  name: prometheus-core
+  namespace: monitoring
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 2147483647
+  selector:
+    matchLabels:
+      app: prometheus
+      component: core
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: prometheus
+        component: core
+      name: prometheus-main
+    spec:
+      containers:
+      - args:
+        - -storage.local.retention=12h
+        - -storage.local.memory-chunks=500000
+        - -config.file=/etc/prometheus/prometheus.yaml
+        - -alertmanager.url=http://alertmanager:9093/
+        image: prom/prometheus:v1.7.0
+        imagePullPolicy: IfNotPresent
+        name: prometheus
+        ports:
+        - containerPort: 9090
+          name: webui
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500M
+          requests:
+            cpu: 500m
+            memory: 500M
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/prometheus
+          name: config-volume
+        - mountPath: /etc/prometheus-rules
+          name: rules-volume
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: prometheus-k8s
+      serviceAccountName: prometheus-k8s
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: prometheus-core
+        name: config-volume
+      - configMap:
+          defaultMode: 420
+          name: prometheus-rules
+        name: rules-volume
+status: {}

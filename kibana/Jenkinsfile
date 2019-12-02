@@ -1,0 +1,50 @@
+pipeline{
+ agent any
+ environment
+ {
+     dockerRegistry= 'http://localhost:8082'
+     kubecredentials= "kubernetes-dev"
+     credentials= 'nexus'
+ }
+ stages
+  {
+      stage ('repository clone')
+      {
+          steps {
+              checkout scm
+          }
+      }
+      stage (' docker image build & push to repo')
+      {
+          steps{
+              dir('kibana') {
+                script {
+                    docker.withRegistry(dockerRegistry, credentials) {
+                        def customImage = docker.build("pdi/kibana:6.2.3")
+                        customImage.push()
+                    }
+                }
+              }
+          }
+      }
+      stage(' elasticsearch deployment')
+      {
+        steps
+        {
+          dir('kibana')
+          {
+            script
+            {
+              withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
+              {
+                sh(script: 'kubectl apply -f kibana.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f kibana-service.yaml' + ' --kubeconfig $kubeconfig')
+              }
+            }
+          }
+        }
+      }
+
+
+  }
+}

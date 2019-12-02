@@ -1,0 +1,29 @@
+pipeline{
+ agent any
+ environment
+ {
+     dockerRegistry= 'http://localhost:8082'
+     kubecredentials= "kubernetes-dev"
+     credentials= 'nexus'
+ }
+  stages{
+    stage ('repository clone')
+    {
+        steps {
+            checkout scm
+        }
+    }
+  	stage ('Docker build') {
+      steps{
+        dir('kafka/kafka-app') {
+          script {
+      	    docker.withRegistry(dockerRegistry, credentials) {
+                  def baseImage = docker.build("pdi/fluentd-elasticsearch", "fluentd")
+                  baseImage.push "latest"
+              }
+          }
+        }
+      }
+  	}
+  }
+}

@@ -37,20 +37,36 @@ pipeline{
               }
           }
       }
-      /*
-      stage ('kubernetes deploy')
+      stage(' activemq deployment')
       {
-        steps {
-          dir('couchbase') {
-            script {
-              withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')]) {
-                sh(script: 'kubectl apply -f cluster-master.yaml' + ' --kubeconfig $kubeconfig')
-                sh(script: 'kubectl apply -f cluster-master-service.yaml' + ' --kubeconfig $kubeconfig')
+        steps
+        {
+          dir('activemq')
+          {
+            script
+            {
+              withCredentials([file(credentialsId: kubecredentials, variable: 'kubeconfig')])
+              {
+                def volumeExist = sh(script: 'kubectl get pv -n default --kubeconfig $kubeconfig | grep "ebs" | wc -l ', returnStatus: true)
+                if (volumeExist == 0) {
+                  sh(script: 'kubectl apply -f persistent-volume.yaml' + ' --kubeconfig $kubeconfig')
+                  sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
                 }
+                else
+                {
+                  def volumeClaimExist = sh(script: 'kubectl get pvc -n default --kubeconfig $kubeconfig | grep "activemq-pv-claim" | wc -l ', returnStatus: true)
+                  if (volumeClaimExist == 0)
+                  {
+                    sh(script: 'kubectl apply -f persistent-volume-claim.yaml' + ' --kubeconfig $kubeconfig')
+                  }
+                }
+                sh(script: 'kubectl apply -f activemq-statefulset.yaml' + ' --kubeconfig $kubeconfig')
+                sh(script: 'kubectl apply -f activemq-service.yaml' + ' --kubeconfig $kubeconfig')
               }
             }
           }
-      }*/
+        }
+      }
 
   }
 }

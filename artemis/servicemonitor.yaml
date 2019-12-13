@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: activemq-artemis-monitor
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus
+spec:
+  endpoints:
+  - port: jmx-exporter
+    interval: 10s
+    scrapeTimeout: 10s
+  selector:
+    matchLabels:
+      app: activemq-artemis
+  namespaceSelector:
+    any: true

@@ -31,8 +31,8 @@ spec:
       - name: datadir
         persistentVolumeClaim:
           claimName: kafka-app-pv-claim
-      imagePullSecrets:
-        - name: regcred
+      #imagePullSecrets:
+      #  - name: regcred
       containers:
       - command:
         - sh
@@ -61,8 +61,8 @@ spec:
           value: "5555"
         - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
           value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
-        #image: confluentinc/cp-kafka:4.1.2-2
-        image: localhost:8082/pdi/kafka-app:1.0.1
+        image: confluentinc/cp-kafka:4.1.2-2
+        #image: localhost:8082/pdi/kafka-app:1.0.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:

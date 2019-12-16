@@ -1,4 +1,4 @@
-piVersion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
@@ -25,8 +25,8 @@ spec:
                 - database
       containers:
       - name: redis
-        #image: redis:4.0.10-stretch
-        image: localhost:8082/pdi/redis:1.0.0
+        image: redis:4.0.10-stretch
+        #image: localhost:8082/pdi/redis:1.0.0
         imagePullPolicy: Always
         ports:
         - containerPort: 6379

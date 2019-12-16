@@ -20,15 +20,16 @@ spec:
       labels:
         app: kafka-topics-ui
     spec:
-      imagePullSecrets:
-        - name: regcred
+#      imagePullSecrets:
+#        - name: regcred
       containers:
       - env:
         - name: KAFKA_REST_PROXY_URL
           value: kafka-cloud-proxy.default:8082
         - name: PROXY
           value: "true"
-        image: localhost:8082/pdi/kafka-topics-ui:1.0.0
+        #image: localhost:8082/pdi/kafka-topics-ui:1.0.0
+        image: landoop/kafka-topics-ui:0.9.4
         imagePullPolicy: Always
         name: kafka-topics-ui
         ports:

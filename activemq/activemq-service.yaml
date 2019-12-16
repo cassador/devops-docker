@@ -13,4 +13,4 @@ spec:
   - nodePort: 32191
     port: 61616
     name: smp-activemq
-    targetPort: 54321
+#    targetPort: 54321

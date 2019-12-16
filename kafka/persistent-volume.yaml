@@ -5,7 +5,7 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: manual
+  storageClassName: local-storage 
   capacity:
     storage: 2Gi
   accessModes:

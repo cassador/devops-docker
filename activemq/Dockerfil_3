@@ -1,0 +1,23 @@
+FROM rmohr/activemq
+
+
+
+USER root
+
+WORKDIR /
+
+RUN tar xzf $ACTIVEMQ-bin.tar.gz -C  /opt && \
+    chown -R activemq:activemq /opt/$ACTIVEMQ && \
+    chown -h activemq:activemq $ACTIVEMQ_HOME
+RUN chown -hR activemq:activemq /opt/activemq/data
+RUN chown -hR activemq:activemq /opt/activemq/conf
+RUN chown -hR activemq:activemq /opt/activemq
+
+USER activemq
+
+WORKDIR $ACTIVEMQ_HOME
+EXPOSE $ACTIVEMQ_TCP $ACTIVEMQ_AMQP $ACTIVEMQ_STOMP $ACTIVEMQ_MQTT $ACTIVEMQ_WS $ACTIVEMQ_UI
+
+CMD ["/bin/sh", "-c", "bin/activemq console"]
+
+

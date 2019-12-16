@@ -15,16 +15,24 @@ spec:
         app: smp-activemq
     spec:
       volumes:
-      - name: datadir-active
+      - name: datadir
         persistentVolumeClaim:
           claimName: activemq-pv-claim
       containers:
       - name: smp-activemq
-        image: localhost:8082/pdi/activemq:1.0.0
+#        image: localhost:8082/pdi/activemq:1.0.0
         imagePullPolicy: IfNotPresent
+#        command: ["/bin/sh", "-c", "sleep 6000"]
+#        image: rmohr/activemq
+        image:  pdi/activemq-test:latest
+#        image: dasdebde/activemq:5.15.9
         ports:
         - containerPort: 61616
           name: smp-activemq
         volumeMounts:
-        - name: datadir-active
-          mountPath: <mount-path>
+         - name: datadir
+           mountPath: /opt/activemq
+#        - name: datadir-active
+#          mountPath: /opt/activemq/data/
+#        - name: datadir-conf
+#          mountPath: /opt/activemq/conf/ 

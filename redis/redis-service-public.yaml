@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-public
+  namespace: default
+spec:
+  ports:
+  - port: 6379 
+    protocol: TCP
+    targetPort: 6379
+    nodePort: 30118
+  selector:
+    app: redis
+  sessionAffinity: None
+  type: NodePort
+
+

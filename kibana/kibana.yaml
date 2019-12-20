@@ -26,10 +26,10 @@ spec:
                 - elastic
       containers:
       - name: kibana
-        #image: docker.elastic.co/kibana/kibana-oss:6.2.3
-        image: localhost:8082/pdi/kibana:6.2.3
-        imagePullSecrets:
-          - name: regsecret
+        image: docker.elastic.co/kibana/kibana-oss:6.2.3
+        #image: localhost:8082/pdi/kibana:6.2.3
+#        imagePullSecrets:
+#          - name: regsecret
         env:
         - name: CLUSTER_NAME
           value: es-dd

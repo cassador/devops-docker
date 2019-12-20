@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: elasticsearch-pv-claim
+  name: redis-pv-claim
 spec:
-  storageClassName: local-storage 
-  volumeName: elastic-pv
+  storageClassName: local-storage
+  volumeName: redis-volume
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 5Gi

@@ -1,0 +1,213 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    creationTimestamp: null
+    name: fluentd
+    namespace: default
+  secrets:
+  - name: defaultsecret
+    namespace: default
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    creationTimestamp: null
+    name: fluentd
+    namespace: default
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - namespaces
+    - pods
+    verbs:
+    - get
+    - list
+    - watch
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    creationTimestamp: null
+    name: fluentd
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: fluentd
+  subjects:
+  - kind: ServiceAccount
+    name: fluentd
+    namespace: default
+- apiVersion: v1
+  data:
+    fluent.conf: |
+      <system>
+        log_level warn
+      </system>
+
+      <source>
+        @type tail
+        path /var/log/containers/*.log
+        exclude_path ["/var/log/containers/kube-*.log", "/var/log/containers/calico-*.log", "/var/log/containers/heapster-*.log", "/var/log/containers/etcd-*.log", "/var/log/containers/kubernetes-*.log", "/var/log/containers/fluentd-*.log", "/var/log/containers/monitoring-*.log", "/var/log/containers/custodian-agent-app-*"]
+        pos_file /var/log/fluentd-containers.log.pos
+        tag kubernetes.*
+        read_from_head true
+        multiline_flush_interval 3s
+        <parse>
+          @type json
+        </parse>
+        @label @INPUT
+      </source>
+
+      <label @INPUT>
+        <filter kubernetes.**>
+          @type concat
+          key log
+          multiline_start_regexp /^(?>\d\d){1,2}[-/](?:0?[1-9]|1[0-2])[-/](?:(?:0[1-9])|(?:[12][0-9])|(?:3[01])|[1-9])[T ](?:2[0123]|[01]?[0-9]):?(?:[0-5][0-9])(?::?(?:(?:[0-5]?[0-9]|60)(?:[:.,][0-9]+)?))?(?:Z|[+-](?:2[0123]|[01]?[0-9])(?::?(?:[0-5][0-9])))?/
+          separator ""
+          flush_interval 3s
+          timeout_label @PARSE
+        </filter>
+        <match>
+          @type relabel
+          @label @PARSE
+        </match>
+      </label>
+
+      <label @ERROR>
+          <match **>
+             @type stdout
+          </match>
+      </label>
+
+      <label @PARSE>
+        <filter kubernetes.**>
+          @type parser
+          key_name log
+          inject_key_prefix log.
+          <parse>
+            @type multiline_grok
+            grok_failure_key grokfailure
+            <grok>
+              pattern ^%{TIMESTAMP_ISO8601:timestamp_parsed}\s*(?<message>(.|\r|\n)*)$
+            </grok>
+          </parse>
+        </filter>
+        <match>
+          @type relabel
+          @label @TRANSFORM
+        </match>
+      </label>
+
+      <label @TRANSFORM>
+        <filter kubernetes.**>
+          @type record_transformer
+          enable_ruby
+          <record>
+            log.timestamp ${require 'date'; if record.dig("log.timestamp_parsed").include? "T"; return record.dig("log.timestamp_parsed"); else; return DateTime.parse(record.dig("log.timestamp_parsed"), '%Y-%m-%d %H:%M:%S,%L').strftime('%Y-%m-%dT%H:%M:%S.%L%z'); end;}
+          </record>
+          remove_keys log.timestamp_parsed
+        </filter>
+        <match>
+          @type relabel
+          @label @MAIN
+        </match>
+      </label>
+
+      <label @MAIN>
+          <filter kubernetes.**>
+             @type kubernetes_metadata
+          </filter>
+          <match **>
+             @type elasticsearch
+             include_tag_key true
+             host elasticsearch.default
+             port 9200
+             logstash_format true
+             time_key log.timestamp
+             buffer_chunk_limit 1024M
+             buffer_queue_limit 512
+             flush_interval 5s
+             max_retry_wait 30
+             num_threads 8
+          </match>
+      </label>
+  kind: ConfigMap
+  metadata:
+    creationTimestamp: null
+    name: fluentd
+    namespace: default
+- apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    annotations:
+      deprecated.daemonset.template.generation: "0"
+    creationTimestamp: null
+    labels:
+      k8s-app: fluentd-logging
+      kubernetes.io/cluster-service: "true"
+      version: v1
+    name: fluentd
+    namespace: default
+  spec:
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        k8s-app: fluentd-logging
+        kubernetes.io/cluster-service: "true"
+        version: v1
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          k8s-app: fluentd-logging
+          kubernetes.io/cluster-service: "true"
+          version: v1
+      spec:
+        containers:
+        - image: caszador/fluentd-es:1.6
+          imagePullPolicy: Always
+          name: fluentd
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /var/log
+            name: varlog
+          - mountPath: /var/lib/docker/containers
+            name: varlibdockercontainers
+          - mountPath: /fluentd/etc/fluent.conf
+            name: config
+            subPath: fluent.conf
+        dnsPolicy: ClusterFirst
+        #imagePullSecrets:
+        #- name: regsecret
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: fluentd
+        serviceAccountName: fluentd
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - hostPath:
+            path: /var/log
+            type: ""
+          name: varlog
+        - hostPath:
+            path: /var/lib/docker/containers
+            type: ""
+          name: varlibdockercontainers
+        - configMap:
+            defaultMode: 420
+            name: fluentd
+          name: config
+    updateStrategy:
+      type: OnDelete
+  status:
+    currentNumberScheduled: 0
+    desiredNumberScheduled: 0
+    numberMisscheduled: 0
+    numberReady: 0
+kind: List
+metadata: {}
+

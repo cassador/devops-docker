@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: elastic-pv
+  name: redis-volume
   labels:
     type: local
 spec:
-  storageClassName: local-storage
+  storageClassName: local-storage 
   capacity:
-    storage: 10Gi
+    storage: 5Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/mnt/app/kibana/data"
+    path: "/mnt/app/redis"

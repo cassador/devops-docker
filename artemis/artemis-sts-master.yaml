@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-artemis-master
+  labels:
+    app: activemq-artemis
+spec:
+  serviceName: activemq-artemis-master-sts
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: activemq-artemis
+      component: master
+  template:
+    metadata:
+      name: activemq-artemis-master
+      labels:
+        app: activemq-artemis
+        component: master
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 5
+            podAffinityTerm:
+              topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchLabels:
+                  app: activemq-artemis
+                  component: slave
+      initContainers:
+      - name: configure-cluster
+        image: vromero/activemq-artemis
+        #image: localhost:8082/pdi/activemq-artemis:2.6.2
+        imagePullPolicy: Always
+        #imagePullSecrets:
+        #  - regsecret
+        command: ["/bin/sh", "/opt/configure-master/configure-cluster.sh"]
+        volumeMounts:
+          - name: config-override
+            mountPath: /var/lib/artemis/etc-override
+          - name: configure-common
+            mountPath: /opt/configure-common
+          - name: configure-master
+            mountPath: /opt/configure-master
+      containers:
+      - name: activemq-artemis
+        image: vromero/activemq-artemis
+        #image: localhost:8082/pdi/activemq-artemis:2.6.2
+        #imagePullSecrets:
+        #  - regsecret
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+        env:
+        - name: ARTEMIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: activemq-artemis-secret
+              key: artemis-password
+        - name: ARTEMIS_USERNAME
+          value: artemis
+        - name: ARTEMIS_PERF_JOURNAL
+          value: AUTO
+        - name: ENABLE_JMX_EXPORTER
+          value: "true"
+        ports:
+        - name: http
+          containerPort: 8161
+        - name: core
+          containerPort: 61616
+        - name: amqp
+          containerPort: 5672
+        - name: jmxexporter
+          containerPort: 9404
+        livenessProbe:
+          tcpSocket:
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: core
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        volumeMounts:
+#        - name: data
+#          mountPath: /var/lib/artemis/data
+        - name: config-override
+          mountPath: /var/lib/artemis/etc-override
+        - name: configure-common
+          mountPath: /opt/configure-common
+        - name: configure-master
+          mountPath: /opt/configure-master
+      volumes:
+      - name: config-override
+        emptyDir: {}
+      - name: configure-common
+        configMap:
+          name: activemq-artemis-configmap-common
+      - name: configure-master
+        configMap:
+          name: activemq-artemis-configmap-master
+

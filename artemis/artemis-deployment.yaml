@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: activemq-artemis
+  name: activemq-artemis
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq-artemis
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: activemq-artemis
+    spec:
+#      imagePullSecrets:
+#        - name: regcred
+      containers:
+      - env:
+        - name: ARTEMIS_MIN_MEMORY
+          value: "1512M"
+        - name: ARTEMIS_MAX_MEMORY
+          value: "3024M"
+        - name:  ARTEMIS_USERNAME
+          value: artemisUser
+        - name: ARTEMIS_PASSWORD
+          value: welcome1.
+        #image: localhost:8082/pdi/activemq-artemis:1.0.0
+        image: vromero/activemq-artemis
+        imagePullPolicy: Always
+        name: activemq-artemis
+        ports:
+        - containerPort: 61616
+          protocol: TCP
+        - containerPort: 8161
+          protocol: TCP
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+

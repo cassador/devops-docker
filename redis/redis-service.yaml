@@ -9,10 +9,8 @@ metadata:
 spec:
   externalTrafficPolicy: Cluster
   ports:
-  - nodePort: 30118
-    port: 6379
+  - port: 6379
     protocol: TCP
-    targetPort: 6379
+    targetPort: redis
   selector:
     app: redis
-  type: NodePort

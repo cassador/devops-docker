@@ -88,14 +88,8 @@ items:
           <parse>
             @type multiline_grok
             grok_failure_key grokfailure
-           # <grok>
-            #  pattern ^%{TIMESTAMP_ISO8601:timestamp_parsed}\s*(?<message>(.|\r|\n)*)$
-           # </grok>
             <grok>
-              pattern ^-*%{TIMESTAMP_ISO8601:timestamp_parsed}\s*\[myid:]\s*-*\s*%{LOGLEVEL:level}\s%{GREEDYDATA}
-            </grok>
-            <grok>
-              pattern ^-*%{TIMESTAMP_ISO8601:timestamp_parsed}\s*-*\s*%{LOGLEVEL:level}\s%{GREEDYDATA}
+              pattern ^%{TIMESTAMP_ISO8601:timestamp_parsed}\s*(?<message>(.|\r|\n)*)$
             </grok>
           </parse>
         </filter>

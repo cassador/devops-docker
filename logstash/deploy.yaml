@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: logstash
+  name: logstash
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      #imagePullSecrets:
+      #  - name: regcred
+      containers:
+      - image: docker.elastic.co/logstash/logstash:7.4.2
+        imagePullPolicy: Always        
+        name: logstash
+        ports:
+        - containerPort: 9600
+          name: logstash
+        - containerPort: 5044
+          name: beats
+        volumeMounts:
+        - name: logstash-config
+          mountPath: /usr/share/logstash/pipeline/
+      volumes:
+      - name: logstash-config
+        configMap:
+          name: logstash-conf
+

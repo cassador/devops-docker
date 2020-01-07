@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: default
+  labels:
+    component: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+     component: kibana
+  template:
+    metadata:
+      labels:
+        component: kibana
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: elastic
+                operator: In
+                values:
+                - elastic
+      containers:
+      - name: kibana
+        image: docker.elastic.co/kibana/kibana-oss:6.2.3
+#        image: docker.elastic.co/kibana/kibana:7.2.0 
+        #image: localhost:8082/pdi/kibana:6.2.3
+#        imagePullSecrets:
+#          - name: regsecret
+        env:
+        - name: CLUSTER_NAME
+          value: es-dd
+        - name: ELASTICSEARCH_URL
+          value: http://elasticsearch:9200
+        - name: LOGGING_QUIET
+          value: "true"
+        resources:
+          limits:
+            cpu: 1000m
+          requests:
+            cpu: 100m
+        ports:
+        - containerPort: 5601
+          name: http

@@ -1,47 +1,62 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kibana
-  namespace: default
+  annotations:
+    deployment.kubernetes.io/revision: "1"
   labels:
-    component: kibana
+    app: kibana
+    release: kibana
+  name: kibana-kibana
+  namespace: default
 spec:
+  progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
-     component: kibana
+      app: kibana
+      release: kibana
+  strategy:
+    type: Recreate
   template:
     metadata:
+      creationTimestamp: null
       labels:
-        component: kibana
+        app: kibana
+        release: kibana
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: elastic
-                operator: In
-                values:
-                - elastic
       containers:
-      - name: kibana
-        image: docker.elastic.co/kibana/kibana-oss:6.2.3
-        #image: localhost:8082/pdi/kibana:6.2.3
-#        imagePullSecrets:
-#          - name: regsecret
-        env:
-        - name: CLUSTER_NAME
-          value: es-dd
-        - name: ELASTICSEARCH_URL
-          value: http://elasticsearch.default:9200
-        - name: LOGGING_QUIET
-          value: "true"
-        resources:
-          limits:
-            cpu: 1000m
-          requests:
-            cpu: 100m
+      - env:
+        - name: ELASTICSEARCH_HOSTS
+          #value: http://elasticsearch-master:9200
+          value: http://elasticsearch:9200
+        - name: SERVER_HOST
+          value: 0.0.0.0
+        #image: docker.elastic.co/kibana/kibana:7.5.1
+        image: docker.elastic.co/kibana/kibana:7.4.2
+        imagePullPolicy: IfNotPresent
+        name: kibana
         ports:
         - containerPort: 5601
           name: http
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 500Mi
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1000
+      terminationGracePeriodSeconds: 30

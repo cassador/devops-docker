@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: es-node-all
+  namespace: default
+  labels:
+    component: elasticsearch
+    role: all
+spec:
+  serviceName: elasticsearch-all
+  replicas: 1
+  selector:
+    matchLabels:
+      component: elasticsearch
+      role: all
+  template:
+    metadata:
+      labels:
+        component: elasticsearch
+        role: all
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: elastic
+                operator: In
+                values:
+                - elastic
+      initContainers:
+      - name: init-sysctl
+        image: busybox:1.27.2
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        securityContext:
+          privileged: true
+      volumes:
+      - name: datadir
+        persistentVolumeClaim:
+          claimName: elasticsearch-pv-claim 
+      containers:
+      - name: es-node-all
+        image: quay.io/pires/docker-elasticsearch-kubernetes:6.2.3
+#        image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+#        image: quay.io/pires/docker-elasticsearch:7.0.0
+#        image: travix/elasticsearch-kubernetes:7.1.0
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CLUSTER_NAME
+          value: es-dd
+        - name: NODE_MASTER
+          value: "true"
+        - name: NODE_INGEST
+          value: "false"
+        - name: HTTP_ENABLE
+          value: "true"
+        - name: ES_JAVA_OPTS
+          value: -Xms6144m -Xmx6144m
+          #value: -Xms4098m -Xmx6144m
+        - name: NETWORK_HOST
+          value: _site_,_lo_
+        - name: PROCESSORS
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.cpu
+        resources:
+          limits:
+            cpu: 1
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: transport
+        livenessProbe:
+          tcpSocket:
+            port: transport
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            #path: /_cluster/health
+            port: http
+          initialDelaySeconds: 20
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: datadir 
+          mountPath: /data

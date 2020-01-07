@@ -8,8 +8,9 @@ metadata:
     role: all
 spec:
   selector:
-    component: elasticsearch
-    role: all
+#    component: elasticsearch
+    app: elasticsearch-master
+#    role: all
   ports:
   - name: http
     port: 9200

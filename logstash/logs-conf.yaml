@@ -1,0 +1,29 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: logstash-conf
+  namespace: default
+data:
+  logstash.conf: |
+    input {
+        beats {
+            port => "5044"
+        }
+    }
+    filter {
+        grok {
+            match => { "message" => "\A%{TIMESTAMP_ISO8601:timestamp} \[myid:] - %{LOGLEVEL:log_level}%{GREEDYDATA:data}"}
+            match => { "message" => "\[%{TIMESTAMP_ISO8601:timestamp}\]%{SPACE}%{LOGLEVEL:level}%{SPACE}\[(?<logger>[^\]]+)\]:%{SPACE}%{GREEDYDATA:message}"}
+            match => { "message" => "\[%{TIMESTAMP_ISO8601:timestamp}\] %{WORD:log_level} %{GREEDYDATA:log_message} \(%{JAVACLASS:logger_name}\)"}
+            match => { "message" => "\A%{SYSLOG5424SD:timestamp} %{LOGLEVEL:log_level}%{SPACE}%{SYSLOG5424SD:controller_id}%{GREEDYDATA:message}"}
+            match => { "message" => "\A%{TIMESTAMP_ISO8601:timestamp}%{SPACE}%{LOGLEVEL:log_level}%{SPACE}\|%{SPACE}%{GREEDYDATA:data}"}
+            match => { "message" => "\A%{TIMESTAMP_ISO8601:timestamp}}%{GREEDYDATA:data}"}
+        }
+    }
+
+    output {
+        elasticsearch {
+            hosts => [ "elasticsearch:9200" ]
+        }
+    }
+

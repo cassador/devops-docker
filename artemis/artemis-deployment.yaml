@@ -28,10 +28,12 @@ spec:
           value: "1512M"
         - name: ARTEMIS_MAX_MEMORY
           value: "3024M"
-        - name:  ARTEMIS_USERNAME
-          value: artemisUser
-        - name: ARTEMIS_PASSWORD
-          value: welcome1.
+#        - name:  ARTEMIS_USERNAME
+#          value: artemisUser
+#        - name: ARTEMIS_PASSWORD
+#          value: welcome1.
+        - name: DISABLE_SECURITY
+          value: "true"
         #image: localhost:8082/pdi/activemq-artemis:1.0.0
         image: vromero/activemq-artemis
         imagePullPolicy: Always

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-team2
+#    version: __VERSION__
+  name: redis
+  namespace: team2
+spec:
+  ports:
+  - port: 6379
+    protocol: TCP
+    targetPort: redis-team2
+  selector:
+    app: redis-team2

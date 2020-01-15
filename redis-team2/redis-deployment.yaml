@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  revisionHistoryLimit: 2
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: database
+                operator: In
+                values:
+                - database
+      containers:
+      - name: redis
+        image: redis:4.0.10-stretch
+        #image: localhost:8082/pdi/redis:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6379
+      restartPolicy: Always

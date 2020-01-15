@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: redis-team2
+  name: redis-team2
+  namespace: team2
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: redis-team2
+  serviceName: redis-team2
+  template:
+    metadata:
+      labels:
+        app: redis-team2
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: redis-pv-claim-team2
+#        - name: config
+#          configMap:
+#            name: redis-server-config
+      imagePullSecrets:
+        - name: regcred
+      containers:
+       - command:
+           - redis-server
+           - "--requirepass !redis^roc1"
+#        - "/redis-master/redis.conf"
+#         image: redis:4.0.10-stretch
+         image: redis:5.0.7
+        #image: localhost:8082/pdi/redis:1.0.0
+         imagePullPolicy: IfNotPresent
+         name: redis-sts
+         ports:
+         - containerPort: 6379
+#           name: redis
+#           protocol: TCP
+         resources: {}
+         volumeMounts:
+         - mountPath: /data/
+           name: data
+#         - mountPath: /redis-master
+#           name: config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 60
+  updateStrategy:
+    type: OnDelete
+

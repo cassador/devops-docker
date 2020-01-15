@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-public-team2
+  namespace: team2 
+spec:
+  ports:
+  - port: 6379 
+    protocol: TCP
+    targetPort: 6379
+    nodePort: 31118
+  selector:
+    app: redis-team2
+  sessionAffinity: None
+  type: NodePort
+
+
